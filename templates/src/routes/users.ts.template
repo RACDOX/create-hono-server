@@ -1,0 +1,208 @@
+import { OpenAPIHono, createRoute, z } from "@hono/zod-openapi";
+import { authMiddleware, AuthUser } from "../middleware/auth";
+import { requireRole } from "../middleware/roleChecker";
+import { db } from "../db/connection";
+import { users } from "../db/schema";
+import { count, eq } from "drizzle-orm";
+
+const app = new OpenAPIHono();
+
+// Apply auth middleware to all routes
+app.use("*", authMiddleware);
+
+// Get Current User Route
+const getMeRoute = createRoute({
+  method: "get",
+  path: "/me",
+  responses: {
+    200: {
+      content: {
+        "application/json": {
+          schema: z.object({
+            id: z.number(),
+            email: z.string(),
+            name: z.string(),
+            role: z.string(),
+            createdAt: z.string(),
+          }),
+        },
+      },
+      description: "Current user information",
+    },
+    401: {
+      content: {
+        "application/json": {
+          schema: z.object({
+            error: z.string(),
+            message: z.string(),
+          }),
+        },
+      },
+      description: "Unauthorized",
+    },
+  },
+  tags: ["Users"],
+  summary: "Get current user",
+  description: "Get information about the authenticated user",
+  security: [
+    {
+      cookieAuth: [],
+    },
+  ],
+});
+
+app.openapi(getMeRoute, async (c) => {
+  try {
+    const user = c.get("user") as AuthUser;
+
+    // Fetch full user details from database
+    const [userDetails] = await db
+      .select({
+        id: users.id,
+        email: users.email,
+        name: users.name,
+        role: users.role,
+        createdAt: users.createdAt,
+      })
+      .from(users)
+      .where(eq(users.id, user.userId))
+      .limit(1);
+
+    if (!userDetails) {
+      return c.json(
+        {
+          error: "User not found",
+        },
+        404
+      );
+    }
+
+    return c.json({
+      id: userDetails.id,
+      email: userDetails.email,
+      name: userDetails.name,
+      role: userDetails.role,
+      createdAt: userDetails.createdAt.toISOString(),
+    });
+  } catch (error) {
+    console.error("Get me error:", error);
+    return c.json(
+      {
+        error: "Internal server error",
+      },
+      500
+    );
+  }
+});
+
+// Get All Users Route
+const getAllUsersRoute = createRoute({
+  method: "get",
+  path: "/allusers",
+  request: {
+    query: z.object({
+      page: z.string().optional().openapi({
+        example: "1",
+      }),
+      limit: z.string().optional().openapi({
+        example: "10",
+      }),
+    }),
+  },
+  responses: {
+    200: {
+      content: {
+        "application/json": {
+          schema: z.object({
+            users: z.array(
+              z.object({
+                id: z.number(),
+                email: z.string(),
+                name: z.string(),
+                role: z.string(),
+                createdAt: z.string(),
+              })
+            ),
+            pagination: z.object({
+              page: z.number(),
+              limit: z.number(),
+              total: z.number(),
+            }),
+          }),
+        },
+      },
+      description: "List of all users with pagination",
+    },
+    401: {
+      content: {
+        "application/json": {
+          schema: z.object({
+            error: z.string(),
+            message: z.string(),
+          }),
+        },
+      },
+      description: "Unauthorized",
+    },
+  },
+  tags: ["Users"],
+  summary: "Get all users",
+  description: "Get a paginated list of all users (requires admin or moderator role)",
+  security: [
+    {
+      cookieAuth: [],
+    },
+  ],
+});
+
+app.openapi(getAllUsersRoute, requireRole(["admin", "moderator"]), async (c) => {
+  try {
+    const query = c.req.valid("query");
+    const page = parseInt(query.page || "1");
+    const limit = parseInt(query.limit || "10");
+    const offset = (page - 1) * limit;
+
+    // Get total count
+    const [{ total }] = await db.select({ total: count() }).from(users);
+
+    // Get users with pagination
+    const allUsers = await db
+      .select({
+        id: users.id,
+        email: users.email,
+        name: users.name,
+        role: users.role,
+        createdAt: users.createdAt,
+      })
+      .from(users)
+      .limit(limit)
+      .offset(offset)
+      .orderBy(users.createdAt);
+
+    return c.json({
+      users: allUsers.map((user) => ({
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        role: user.role,
+        createdAt: user.createdAt.toISOString(),
+      })),
+      pagination: {
+        page,
+        limit,
+        total: Number(total),
+      },
+    });
+  } catch (error) {
+    console.error("Get all users error:", error);
+    return c.json(
+      {
+        error: "Internal server error",
+      },
+      500
+    );
+  }
+});
+
+export default app;
+

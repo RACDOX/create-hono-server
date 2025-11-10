@@ -1,0 +1,36 @@
+{
+    "name": "create-hono-server",
+    "version": "1.0.1",
+    "description": "Scaffold a Hono server with authentication, RBAC, and OpenAPI docs",
+    "type": "module",
+    "bin": {
+        "create-hono-server": "./index.js"
+    },
+    "keywords": [
+        "hono",
+        "backend",
+        "template",
+        "auth",
+        "drizzle",
+        "openapi",
+        "cli",
+        "scaffold",
+        "generator"
+    ],
+    "author": "Your Name",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/yourusername/create-hono-server"
+    },
+    "bugs": {
+        "url": "https://github.com/yourusername/create-hono-server/issues"
+    },
+    "homepage": "https://github.com/yourusername/create-hono-server#readme",
+    "license": "MIT",
+    "dependencies": {
+        "prompts": "^2.4.2",
+        "chalk": "^5.3.0",
+        "ora": "^8.0.1",
+        "fs-extra": "^11.2.0"
+    }
+}
