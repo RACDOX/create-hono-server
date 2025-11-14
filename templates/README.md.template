@@ -1,0 +1,258 @@
+# {{projectName}}
+
+A production-ready Hono server with JWT authentication, role-based access control (RBAC), PostgreSQL, Drizzle ORM, and OpenAPI documentation.
+
+## 🚀 Features
+
+- **Hono Framework** - Ultrafast web framework for the Edge
+- **JWT Authentication** - Secure cookie-based authentication
+- **Role-Based Access Control** - Admin, moderator, and user roles
+- **PostgreSQL + Drizzle ORM** - Type-safe database operations
+- **OpenAPI 3.0 Documentation** - Interactive API docs with Scalar
+- **Zod Validation** - Runtime type validation
+- **TypeScript** - Full type safety
+- **Bun Runtime** - Fast JavaScript runtime
+
+## 📦 Tech Stack
+
+- [Hono](https://hono.dev/) - Web framework
+- [Drizzle ORM](https://orm.drizzle.team/) - TypeScript ORM
+- [Zod](https://zod.dev/) - Schema validation
+- [Scalar](https://github.com/scalar/scalar) - API documentation
+- [Bun](https://bun.sh/) - JavaScript runtime
+- [PostgreSQL](https://www.postgresql.org/) - Database
+
+## 🛠️ Setup
+
+### Prerequisites
+
+- Bun installed ([Install Bun](https://bun.sh/))
+- PostgreSQL database (local or cloud like [Neon](https://neon.tech/))
+
+### Installation
+
+1. **Install dependencies:**
+
+```bash
+bun install
+```
+
+2. **Set up environment variables:**
+
+Create a `.env` file in the root directory:
+
+```env
+DATABASE_URL=postgresql://user:password@localhost:5432/dbname
+JWT_SECRET=your-super-secret-jwt-key
+PORT=3000
+```
+
+3. **Push database schema:**
+
+```bash
+bun run db:push
+```
+
+4. **Start development server:**
+
+```bash
+bun run dev
+```
+
+The server will start on [http://localhost:3000](http://localhost:3000)
+
+## 📚 API Documentation
+
+Visit [http://localhost:3000/reference](http://localhost:3000/reference) to view the interactive API documentation.
+
+OpenAPI JSON spec available at: [http://localhost:3000/openapi.json](http://localhost:3000/openapi.json)
+
+## 🔐 API Endpoints
+
+### Authentication
+
+#### POST `/auth/signup`
+
+Register a new user.
+
+**Request Body:**
+```json
+{
+  "email": "user@example.com",
+  "password": "securepassword",
+  "name": "John Doe"
+}
+```
+
+Note: All new users are assigned the `"user"` role by default.
+
+**Response:**
+```json
+{
+  "user": {
+    "id": 1,
+    "email": "user@example.com",
+    "name": "John Doe",
+    "role": "user"
+  },
+  "message": "User created successfully"
+}
+```
+
+#### POST `/auth/login`
+
+Login with existing credentials.
+
+**Request Body:**
+```json
+{
+  "email": "user@example.com",
+  "password": "securepassword"
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Login successful"
+}
+```
+
+### Users (Protected Routes)
+
+User routes require authentication. Some routes also require specific roles.
+
+#### GET `/users/me`
+
+Get current authenticated user.
+
+**Required:** Authentication
+
+**Response:**
+```json
+{
+  "id": 1,
+  "email": "user@example.com",
+  "name": "John Doe",
+  "role": "user",
+  "createdAt": "2024-01-01T00:00:00.000Z"
+}
+```
+
+#### GET `/users/allusers`
+
+Get all users with pagination.
+
+**Required:** Admin or Moderator role
+
+**Query Parameters:**
+- `page` (optional, default: 1)
+- `limit` (optional, default: 10)
+
+**Response:**
+```json
+{
+  "users": [...],
+  "pagination": {
+    "page": 1,
+    "limit": 10,
+    "total": 50
+  }
+}
+```
+
+## 🗄️ Database Commands
+
+```bash
+# Generate migration files
+bun run db:generate
+
+# Push schema changes to database
+bun run db:push
+
+# Open Drizzle Studio (database GUI)
+bun run db:studio
+```
+
+## 🏃 Development
+
+```bash
+# Start development server with hot reload
+bun run dev
+
+# Start production server
+bun run start
+```
+
+## 📁 Project Structure
+
+```
+src/
+├── index.ts              # Main application entry
+├── db/
+│   ├── schema.ts         # Database schema (with roles)
+│   ├── connection.ts     # Database connection
+│   └── init.ts           # Database initialization
+├── middleware/
+│   ├── auth.ts           # Authentication middleware
+│   └── roleChecker.ts    # Role-based access control
+├── routes/
+│   ├── auth.ts           # Authentication routes
+│   └── users.ts          # User routes (with RBAC)
+└── utils/
+    └── auth.ts           # Authentication utilities
+```
+
+## 🔒 Authentication & Authorization Flow
+
+1. User signs up (defaults to "user" role)
+2. Server generates JWT token with role information
+3. Token stored in HTTP-only cookie
+4. Protected routes verify JWT from cookie
+5. Role-based routes check user's role
+6. User data (including role) available in route context
+
+### Available Roles
+
+- **user** - Default role, basic access
+- **moderator** - Can access admin-level user management
+- **admin** - Full access to all admin features
+
+### Using Role-Based Access Control
+
+Routes can be protected with specific roles using the `requireRole` middleware:
+
+```typescript
+import { requireRole } from "../middleware/roleChecker";
+
+// Requires admin or moderator
+app.get("/users/allusers", requireRole(["admin", "moderator"]), handler);
+
+// Requires admin only
+app.delete("/users/:id", requireRole(["admin"]), handler);
+```
+
+## 🌐 CORS
+
+CORS is enabled by default. Configure in `src/index.ts` if needed.
+
+## 📝 License
+
+MIT
+
+## 🤝 Contributing
+
+Contributions welcome! Feel free to open issues and pull requests.
+
+## 💡 Tips
+
+- Keep your `JWT_SECRET` secure and never commit it
+- Use environment variables for sensitive data
+- Run `bun run db:studio` to visually inspect your database
+- Check `/reference` endpoint for complete API documentation
+
+---
+
+Built with ❤️ using Hono and Bun
+
