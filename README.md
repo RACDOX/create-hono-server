@@ -13,7 +13,7 @@ A CLI tool to scaffold a production-ready Hono server with JWT authentication, r
 ✅ Zod validation  
 ✅ TypeScript support  
 ✅ Production-ready code structure  
-✅ Beautiful colored terminal output  
+✅ Beautiful colored terminal output
 
 ## Usage
 
@@ -32,20 +32,24 @@ bunx create-hono-server
 Running this CLI will create a new Hono server project with:
 
 - **Authentication System**
+
   - POST `/auth/signup` - User registration (defaults to "user" role)
   - POST `/auth/login` - User login
   - Cookie-based JWT authentication
 
 - **Role-Based Access Control**
+
   - Three roles: `user`, `moderator`, `admin`
   - Role checker middleware for protected routes
   - JWT tokens include role information
 
 - **User Management**
+
   - GET `/users/me` - Get current user (protected)
   - GET `/users/allusers` - Get all users with pagination (requires admin or moderator role)
 
 - **Documentation**
+
   - GET `/reference` - Interactive API docs (Scalar)
   - GET `/openapi.json` - OpenAPI specification
 
@@ -93,6 +97,7 @@ cp .env.example .env
 
 # Edit .env with your database credentials
 # DATABASE_URL=postgresql://user:password@localhost:5432/dbname
+# JWT_SECRET=your-secret-key
 
 # Push database schema
 bun run db:push
@@ -124,32 +129,7 @@ Visit `http://localhost:3000/reference` for API documentation.
 
 ### Local Testing
 
-```bash
-# Install dependencies
-npm install
-
-# Link package locally
-npm link
-
-# Test the CLI
-create-hono-server test-project
-
-# Unlink when done
-npm unlink -g create-hono-server
-```
-
-## Publishing
-
-```bash
-# Login to npm
-npm login
-
-# Publish package
-npm publish
-
-# Users can now run
 npx create-hono-server
-```
 
 ## Requirements
 
@@ -171,4 +151,3 @@ For issues and questions, please open an issue on the GitHub repository.
 ---
 
 Made with ❤️ using Hono and Bun
-
