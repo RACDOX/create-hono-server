@@ -15,6 +15,10 @@ A CLI tool to scaffold a production-ready Hono server with JWT authentication, r
 ✅ Production-ready code structure  
 ✅ Beautiful colored terminal output
 
+# DEMO
+<img width="1710" height="880" alt="image" src="https://github.com/user-attachments/assets/cadc53f9-9db4-4695-9531-5ad50e7949eb" />
+
+
 ## Usage
 
 ```bash
